@@ -1,5 +1,5 @@
---bgcolor black
---fgcolor white 
+--bgcolor white
+--fgcolor black 
 --author Łukasz Proszek 
 --title ansible docker 
 --date today 
@@ -8,12 +8,38 @@
 --boldon 
 --center "How I lost most of my hair." 
 --boldoff 
- 
---newpage ansible 
-Need to work on git-master 
---beginshelloutput 
-git clone https://github.com/ansible/ansible.git 
---endshelloutput 
+
+--newpage
+--heading ansible 1.1 (apt-get install ansible)
+--color red
+--beginshelloutput
+» ansible-playbook meetup.yml
+ERROR: roles is not a legal parameter in an Ansible Playbook
+--endshelloutput
+--color black
+---
+Tough luck :(
+--- 
+--heading ansible 1.4.5 (pip install)
+--beginshelloutput
+» ansible-playbook meetup.yml
+PLAY RECAP ******************************************************************** 
+niemiecki                  : ok=18   changed=0    unreachable=0    failed=0
+--endshelloutput
+
+--newpage
+--heading let's ansible us some docker!
+--beginoutput
+- apt_key: url="https://get.docker.io/gpg"
+
+- apt_repository: repo='deb http://get.docker.io/ubuntu docker main' update_cache=yes
+
+- apt: pkg={{item}} state=latest
+  with_items: 
+    - lxc-docker
+    - python-pip
+    - cgroup-lite
+--endoutput
 
 --newpage
 --beginoutput
