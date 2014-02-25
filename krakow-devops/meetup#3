@@ -1,0 +1,16 @@
+--bgcolor black                                                                 
+--fgcolor white                                                                 
+--author Łukasz Proszek                                                         
+--title ansible + docker                                                        
+--date today                                                                    
+---                                                                             
+--center In other words                                                         
+--boldon                                                                        
+--center "How I lost most of my hair."                                          
+--boldoff                                                                       
+                                                                                
+--newpage ansible                                                               
+Need to work on git-master                                                      
+--beginshelloutput                                                              
+git clone https://github.com/ansible/ansible.git                                
+--endshelloutput  
