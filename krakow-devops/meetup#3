@@ -1,16 +1,84 @@
---bgcolor black                                                                 
---fgcolor white                                                                 
---author Łukasz Proszek                                                         
---title ansible + docker                                                        
---date today                                                                    
----                                                                             
---center In other words                                                         
---boldon                                                                        
---center "How I lost most of my hair."                                          
---boldoff                                                                       
-                                                                                
---newpage ansible                                                               
-Need to work on git-master                                                      
---beginshelloutput                                                              
-git clone https://github.com/ansible/ansible.git                                
---endshelloutput  
+--bgcolor black
+--fgcolor white 
+--author Łukasz Proszek 
+--title ansible docker 
+--date today 
+--- 
+--center In other words 
+--boldon 
+--center "How I lost most of my hair." 
+--boldoff 
+ 
+--newpage ansible 
+Need to work on git-master 
+--beginshelloutput 
+git clone https://github.com/ansible/ansible.git 
+--endshelloutput 
+
+--newpage
+--beginoutput
+- name: cgroup kernel config?
+  lineinfile: >
+    state=present
+    dest="/etc/default/grub"
+    line='GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX cgroup_enable=memory swapaccount=1"'
+  register: grub_defaults
+  tags: dependencies
+--endoutput
+---
+if changed then restart machine, and so on
+
+--newpage
+--beginoutput
+- name: docker key?
+  apt_key: >
+    state=present 
+    url="https://get.docker.io/gpg"
+  tags: packages
+--endoutput
+---
+--beginoutput
+- name: docker repo?
+  apt_repository: >
+    repo='deb http://get.docker.io/ubuntu docker main'
+    update_cache=yes
+    state=present
+  tags: packages
+--endoutput
+
+--newpage
+--beginoutput
+- name: docker (and dependencies) instaled?
+  apt: pkg={{item}} state=latest
+  with_items: 
+    - lxc-docker
+    - python-pip
+    - cgroup-lite
+  notify: start docker
+  tags: packages
+--endoutput
+
+--newpage
+--beginoutput
+
+--endoutput
+
+--newpage
+--beginoutput
+
+--endoutput
+
+--newpage
+--beginoutput
+
+--endoutput
+
+--newpage
+--beginoutput
+
+--endoutput
+
+--newpage
+--beginoutput
+
+--endoutput
