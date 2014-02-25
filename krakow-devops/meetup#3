@@ -1,8 +1,13 @@
 --bgcolor white
 --fgcolor black 
---author Łukasz Proszek 
---title ansible docker 
+--author Łukasz Proszek <lukasz(at)proszek(dot)info> 
+--title Ansible for your VPS. 
 --date today 
+---
+--center working title: ansible + docker + mariadb + ttrss
+
+
+
 --- 
 --center In other words 
 --boldon 
@@ -28,12 +33,18 @@ niemiecki                  : ok=18   changed=0    unreachable=0    failed=0
 --endshelloutput
 
 --newpage
---heading let's ansible us some docker!
+--heading lets ansible us some docker!
 --beginoutput
 - apt_key: url="https://get.docker.io/gpg"
-
-- apt_repository: repo='deb http://get.docker.io/ubuntu docker main' update_cache=yes
-
+--endoutput
+---
+--beginoutput
+- apt_repository: >
+   repo='deb http://get.docker.io/ubuntu docker main'
+   update_cache=yes
+--endoutput
+---
+--beginoutput
 - apt: pkg={{item}} state=latest
   with_items: 
     - lxc-docker
@@ -42,69 +53,154 @@ niemiecki                  : ok=18   changed=0    unreachable=0    failed=0
 --endoutput
 
 --newpage
+--heading we'd like some cgroup memory control
 --beginoutput
-- name: cgroup kernel config?
-  lineinfile: >
-    state=present
-    dest="/etc/default/grub"
+- lineinfile: >
+    state=present  dest="/etc/default/grub"
     line='GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX cgroup_enable=memory swapaccount=1"'
   register: grub_defaults
-  tags: dependencies
 --endoutput
 ---
-if changed then restart machine, and so on
+--beginoutput
+- command: /usr/sbin/update-grub
+  when: "grub_defaults|changed"
+  register: grub_config
+--endoutput
+---
+--beginoutput
+- command: /sbin/shutdown -r now
+  register: reboot_result
+  when: "grub_config|changed"
+--endoutput
 
 --newpage
---beginoutput
-- name: docker key?
-  apt_key: >
-    state=present 
-    url="https://get.docker.io/gpg"
-  tags: packages
---endoutput
+--heading is it up?
 ---
 --beginoutput
-- name: docker repo?
-  apt_repository: >
-    repo='deb http://get.docker.io/ubuntu docker main'
-    update_cache=yes
+- local_action:
+    module: wait_for
+    host: "{{ ansible_ssh_host|default(inventory_hostname) }}"
+    port: 22
+    delay: 5
+    timeout: 600
+    state: started
+  when: "reboot_result|changed"
+--endoutput
+
+--newpage
+--heading Lets spice-up some things. LVM!
+--beginoutput
+- lineinfile: >
     state=present
-  tags: packages
+    dest=/etc/default/docker
+    line='DOCKER_OPTS="$DOCKER_OPTS -s=devicemapper "'
+  notify: restart docker
 --endoutput
 
+
 --newpage
+Lets skip LVM management (ansible modules: lvg, lvol)
+
+Lets assume that we have two volumes: docker-data, docker-metadata.
+
+--newpage
+--heading docker expects volumes at a specified location
+
 --beginoutput
-- name: docker (and dependencies) instaled?
-  apt: pkg={{item}} state=latest
-  with_items: 
-    - lxc-docker
-    - python-pip
-    - cgroup-lite
-  notify: start docker
-  tags: packages
+- file: > 
+    src=/dev/storage/docker-{{item}}
+    dest=/var/lib/docker/devicemapper/devicemapper/{{item}}
+    state=link
+  with_items:
+    - data
+    - metadata
 --endoutput
 
 --newpage
+--heading demonstration system setup
+
+5 docker images:
+---
+- ubuntu precise with ansible installed (preciseansible)
+---
+- mariadb (preciseansible with mariadb installed)
+---
+- nginx (precisenasible with nginx installed)
+---
+- fpm (preciseansible with php-fpm installed)
+---
+- ttrss (nginx with ttrss installed)
+
+--newpage
+--heading container configuration directories
+--beginoutput
+- file:  path=/srv/docker/{{item}}  state=directory
+  with_items:
+    - preciseansible
+    - mariadb
+    - fpm
+    - nginx
+    - ttrss
+--endoutput
+---
+--beginoutput
+- template: >
+    src={{item}}.dockerfile
+    dest=/srv/docker/{{item}}/Dockerfile
+  register: dockerfile
+  with_items: #same items as above
+--endoutput
+
+--newpage
+--heading ansible inventory for containers
+--beginoutput
+- template: >
+    src=inventory
+    dest=/srv/docker/{{item}}/inventory
+--endoutput
+---
+--heading container orchestration
+--beginoutput
+- template: >
+    src="plays/{{item}}.yml"
+    dest=/srv/docker/{{item}}/site.yml
+  register: site
+--endoutput
+
+--newpage
+--heading where's docker?
+--beginoutput
+- pip: name=docker-py  state=present
+--endoutput
+
+--newpage
+--heading Let's build our containers
+--beginoutput
+- docker_image: >
+    path="/srv/docker/{{item}}"
+    name={{item}}
+    state=build
+  when: "site|changed or dockerfile|changed"
+--endoutput
+
+--newpage
+--heading starting a container
+--beginoutput
+  docker: >
+    image=mariadb
+    command="/usr/bin/mysqld_safe"
+    count=1
+    state=present
+--endoutput
+
+--newpage 
+--heading
 --beginoutput
 
 --endoutput
 
 --newpage
---beginoutput
-
---endoutput
-
---newpage
---beginoutput
-
---endoutput
-
---newpage
---beginoutput
-
---endoutput
-
---newpage
+--heading
 --beginoutput
 
 --endoutput
