@@ -3,6 +3,8 @@
 --author Łukasz Proszek <lukasz(at)proszek(dot)info> 
 --title Ansible for your VPS. 
 --date today 
+--footer Kraków DevOps Meetup #3
+--header Ansible + Docker
 ---
 --center working title: ansible + docker + mariadb + ttrss
 
@@ -21,16 +23,37 @@
 » ansible-playbook meetup.yml
 ERROR: roles is not a legal parameter in an Ansible Playbook
 --endshelloutput
---color black
----
-Tough luck :(
 --- 
+--color black
 --heading ansible 1.4.5 (pip install)
+--color red
 --beginshelloutput
 » ansible-playbook meetup.yml
-PLAY RECAP ******************************************************************** 
-niemiecki                  : ok=18   changed=0    unreachable=0    failed=0
+TASK: [docker | docker mariadb started?] ************************************** 
+failed: [niemiecki] => {"failed": true, "item": ""}
+msg: unsupported parameter for module: name
 --endshelloutput
+---
+--color black
+--newpage
+--heading ansible 1.5.0 (git branch devel)
+--color red
+--beginshelloutput
+fatal: [niemiecki] => failed to parse: Traceback (most recent call last):
+  File "/root/.ansible/tmp/ansible-tmp-1393370346.4-166488415073814/docker", line 407, in create_containers
+    containers = do_create(count, params)
+  File "/root/.ansible/tmp/ansible-tmp-1393370346.4-166488415073814/docker", line 396, in do_create
+    result = self.client.create_container(**params)
+TypeError: create_container() got an unexpected keyword argument 'privileged'
+--endshelloutput
+--color black
+
+--newpage
+--heading The beauty of opensource
+--color magenta
+
+--huge HACK!
+--color black
 
 --newpage
 --heading lets ansible us some docker!
@@ -121,15 +144,15 @@ Lets assume that we have two volumes: docker-data, docker-metadata.
 
 5 docker images:
 ---
-- ubuntu precise with ansible installed (preciseansible)
+* ubuntu precise with ansible installed (preciseansible)
 ---
-- mariadb (preciseansible with mariadb installed)
+* mariadb (preciseansible with mariadb installed)
 ---
-- nginx (precisenasible with nginx installed)
+* nginx (precisenasible with nginx installed)
 ---
-- fpm (preciseansible with php-fpm installed)
+* fpm (preciseansible with php-fpm installed)
 ---
-- ttrss (nginx with ttrss installed)
+* ttrss (nginx with ttrss installed)
 
 --newpage
 --heading container configuration directories
