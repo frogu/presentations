@@ -4,7 +4,6 @@
 --title Ansible for your VPS. 
 --date today 
 --footer Kraków DevOps Meetup #3
---header Ansible + Docker
 ---
 --center working title: ansible + docker + mariadb + ttrss
 
@@ -18,42 +17,59 @@
 
 --newpage
 --heading ansible 1.1 (apt-get install ansible)
---color red
 --beginshelloutput
-» ansible-playbook meetup.yml
+$ ansible-playbook meetup.yml
+--color red
 ERROR: roles is not a legal parameter in an Ansible Playbook
---endshelloutput
---- 
 --color black
+--endshelloutput
+
+--- 
 --heading ansible 1.4.5 (pip install)
---color red
 --beginshelloutput
-» ansible-playbook meetup.yml
+$ ansible-playbook meetup.yml
 TASK: [docker | docker mariadb started?] ************************************** 
 failed: [niemiecki] => {"failed": true, "item": ""}
+--color red
 msg: unsupported parameter for module: name
+--color black
 --endshelloutput
 ---
---color black
 --newpage
 --heading ansible 1.5.0 (git branch devel)
---color red
 --beginshelloutput
+$ ansible-playbook meetup.yml
 fatal: [niemiecki] => failed to parse: Traceback (most recent call last):
   File "/root/.ansible/tmp/ansible-tmp-1393370346.4-166488415073814/docker", line 407, in create_containers
     containers = do_create(count, params)
   File "/root/.ansible/tmp/ansible-tmp-1393370346.4-166488415073814/docker", line 396, in do_create
     result = self.client.create_container(**params)
+--color red
 TypeError: create_container() got an unexpected keyword argument 'privileged'
---endshelloutput
 --color black
+--endshelloutput
 
 --newpage
 --heading The beauty of opensource
 --color magenta
 
---huge HACK!
+--sethugefont roman
+--huge       hack !
 --color black
+
+--newpage
+--heading an ugly temporary fix
+--beginshelloutput
+$ git --no-pager diff --ignore-space-at-eol -U1
+@@ -389,3 +389,3 @@ class DockerManager:
+                   'detach':       self.module.params.get('detach'),
+--color red
+-                  'privileged':   self.module.params.get('privileged'),
+--color green
++#                  'privileged':   self.module.params.get('privileged'),
+--color black
+                   }
+--endshelloutput
 
 --newpage
 --heading lets ansible us some docker!
@@ -64,7 +80,6 @@ TypeError: create_container() got an unexpected keyword argument 'privileged'
 --beginoutput
 - apt_repository: >
    repo='deb http://get.docker.io/ubuntu docker main'
-   update_cache=yes
 --endoutput
 ---
 --beginoutput
@@ -89,15 +104,13 @@ TypeError: create_container() got an unexpected keyword argument 'privileged'
   when: "grub_defaults|changed"
   register: grub_config
 --endoutput
----
+
+--newpage 
 --beginoutput
 - command: /sbin/shutdown -r now
   register: reboot_result
   when: "grub_config|changed"
 --endoutput
-
---newpage
---heading is it up?
 ---
 --beginoutput
 - local_action:
@@ -158,12 +171,7 @@ Lets assume that we have two volumes: docker-data, docker-metadata.
 --heading container configuration directories
 --beginoutput
 - file:  path=/srv/docker/{{item}}  state=directory
-  with_items:
-    - preciseansible
-    - mariadb
-    - fpm
-    - nginx
-    - ttrss
+  with_items: DOCKER_CONTAINERS
 --endoutput
 ---
 --beginoutput
@@ -171,59 +179,156 @@ Lets assume that we have two volumes: docker-data, docker-metadata.
     src={{item}}.dockerfile
     dest=/srv/docker/{{item}}/Dockerfile
   register: dockerfile
-  with_items: #same items as above
+  with_items: DOCKER_CONTAINERS
 --endoutput
 
 --newpage
 --heading ansible inventory for containers
 --beginoutput
 - template: >
-    src=inventory
-    dest=/srv/docker/{{item}}/inventory
+    src=inventory dest=/srv/docker/{{item}}/inventory
 --endoutput
 ---
---heading container orchestration
+--heading templates/inventory
+--beginoutput
+[local]
+localhost ansible_connection=local
+--endoutput
+---
+--heading container orchestration (ugly and hackish)
 --beginoutput
 - template: >
-    src="plays/{{item}}.yml"
-    dest=/srv/docker/{{item}}/site.yml
+    src=plays/{{item}}.yml dest=/srv/docker/{{item}}/site.yml
   register: site
 --endoutput
 
 --newpage
---heading where's docker?
+--heading dependencies for ansible/docker
 --beginoutput
 - pip: name=docker-py  state=present
 --endoutput
+---
+--heading OR
+--beginshelloutput
+- git: >
+    repo=https://github.com/dotcloud/docker-py.git
+    dest=/opt/docker-py
+
+- command: chdir=/opt/docker-py python setup.py build
+
+- command: chdir=/opt/docker-py python setup.py install 
+--endshelloutput
+
+
 
 --newpage
---heading Let's build our containers
+--heading Lets build our containers
 --beginoutput
 - docker_image: >
     path="/srv/docker/{{item}}"
     name={{item}}
     state=build
   when: "site|changed or dockerfile|changed"
+  with: DOCKER_CONTAINERS
 --endoutput
+
+--newpage
+--beginshelloutput
+$ ansible-playbook meetup.yml --tags build
+---
+--color red
+TASK: [docker | docker images?] *********************************************** 
+fatal: [niemiecki] => failed to parse: Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/docker_py-0.3.0-py2.7.egg/docker/client.py", line 235, in _stream_helper
+    socket_fp = self._get_raw_response_socket(response)
+  File "/usr/local/lib/python2.7/dist-packages/docker_py-0.3.0-py2.7.egg/docker/client.py", line 231, in _get_raw_response_socket
+    return response.raw._fp.fp._sock
+AttributeError: 'NoneType' object has no attribute '_sock'
+--color black
+--endshelloutput
+
+--newpage
+--sethugefont banner3
+--color red
+--huge          fail
+--color black
+---
+
+--heading ssh to the host
+--beginshelloutput
+$ for i in preciseansible mariadb nginx; do 
+$    docker build -t "${i}":latest /srv/docker/"${i}"/;
+$ done
+--endshelloutput
 
 --newpage
 --heading starting a container
 --beginoutput
-  docker: >
+- docker: >
     image=mariadb
     command="/usr/bin/mysqld_safe"
     count=1
     state=present
 --endoutput
+---
+--beginshelloutput
+$ ansible-playbook meetup.yml --tags run 
 
+PLAY RECAP ******************************************************************** 
+--color green
+niemiecki                  : ok=3    changed=1    unreachable=0    failed=0 
+--color black
+--endshelloutput
+ 
 --newpage 
---heading
+--heading restarting a container
 --beginoutput
-
+- docker: >
+    image=nginx name=www state=restarted
+    command="/usr/sbin/nginx"
 --endoutput
+--beginshelloutput
+$ ansible-playbook meetup.yml --tags run 
+$ ansible niemiecki -a 'docker ps' | awk '{print $1,$3}'|tail -n3
+
+250452ed7d25 /usr/bin/mysqld_safe
+--endshelloutput
+---
+--color red
+where's nginx?
+--color black
 
 --newpage
---heading
---beginoutput
+--beginshelloutput
+$ ansible niemiecki -m docker -a "image=nginx name=www state=present command='/usr/sbin/nginx'"
+niemiecki | FAILED >> {
+    "changed": true, 
+    "failed": true, 
+--color red
+    "msg": "Docker API error: create: Conflict, The name www is already assigned to 0ffa4c05c4ea. You have to delete (or rename) that container to be able to assign www to a container again."
+}
+--color black
+--endshelloutput
 
---endoutput
+--newpage
+--beginshelloutput
+$ ansible niemiecki -m docker -a "image=nginx name=www state=absent command='/usr/sbin/nginx'"
+$ ansible niemiecki -m docker -a "image=nginx name=www state=present command='/usr/sbin/nginx'"
+
+$ ansible niemiecki -a 'docker ps'|awk '{print $1,$3}'|tail -n3
+
+--color green
+c729e72ae8c7 /usr/sbin/nginx
+--color black
+250452ed7d25 /usr/bin/mysqld_safe
+--endshelloutput
+
+--newpage
+--sethugefont eftiwall
+--huge l                  l
+--sethugefont thick
+
+--huge      questions?
+---
+--sethugefont rammstein
+--huge    thank you!
