@@ -21,6 +21,7 @@
 
 --newpage
 --heading ansible 1.1 (apt-get install ansible)
+--- 
 --beginshelloutput
 $ ansible-playbook meetup.yml
 --color red
@@ -30,6 +31,7 @@ ERROR: roles is not a legal parameter in an Ansible Playbook
 
 --- 
 --heading ansible 1.4.5 (pip install)
+--- 
 --beginshelloutput
 $ ansible-playbook meetup.yml
 TASK: [docker | docker mariadb started?] ************************************** 
@@ -41,6 +43,7 @@ msg: unsupported parameter for module: name
 ---
 --newpage
 --heading ansible 1.5.0 (git branch devel)
+--- 
 --beginshelloutput
 $ ansible-playbook meetup.yml
 fatal: [niemiecki] => failed to parse: Traceback (most recent call last):
@@ -54,15 +57,17 @@ TypeError: create_container() got an unexpected keyword argument 'privileged'
 --endshelloutput
 
 --newpage
---heading The beauty of opensource
+--heading What now?
+--- 
 --color magenta
 
 --sethugefont roman
---huge       hack !
+--huge       hack it!
 --color black
 
 --newpage
 --heading an ugly temporary fix
+--- 
 --beginshelloutput
 $ git --no-pager diff --ignore-space-at-eol -U1
 @@ -389,3 +389,3 @@ class DockerManager:
@@ -77,6 +82,7 @@ $ git --no-pager diff --ignore-space-at-eol -U1
 
 --newpage
 --heading lets ansible us some docker!
+--- 
 --beginoutput
 - apt_key: url="https://get.docker.io/gpg"
 --endoutput
@@ -90,12 +96,12 @@ $ git --no-pager diff --ignore-space-at-eol -U1
 - apt: pkg={{item}} state=latest
   with_items: 
     - lxc-docker
-    - python-pip
     - cgroup-lite
 --endoutput
 
 --newpage
 --heading we'd like some cgroup memory control
+--- 
 --beginoutput
 - lineinfile: >
     state=present  dest="/etc/default/grub"
@@ -129,6 +135,7 @@ $ git --no-pager diff --ignore-space-at-eol -U1
 
 --newpage
 --heading Lets spice-up some things. LVM!
+--- 
 --beginoutput
 - lineinfile: >
     state=present
@@ -139,13 +146,13 @@ $ git --no-pager diff --ignore-space-at-eol -U1
 
 
 --newpage
-Lets skip LVM management (ansible modules: lvg, lvol)
+--center Lets skip LVM management (ansible modules: lvg, lvol)
 
-Lets assume that we have two volumes: docker-data, docker-metadata.
+--center Lets assume that we have two volumes: docker-data, docker-metadata.
 
 --newpage
 --heading docker expects volumes at a specified location
-
+--- 
 --beginoutput
 - file: > 
     src=/dev/storage/docker-{{item}}
@@ -158,8 +165,9 @@ Lets assume that we have two volumes: docker-data, docker-metadata.
 
 --newpage
 --heading demonstration system setup
+--- 
 Or what it was supposed to be...
-
+--- 
 5 docker images:
 ---
 * ubuntu precise with ansible installed (preciseansible)
@@ -179,6 +187,7 @@ Or what it was supposed to be...
 
 --newpage
 --heading container configuration directories
+--- 
 --beginoutput
 - file:  path=/srv/docker/{{item}}  state=directory
   with_items: DOCKER_CONTAINERS
@@ -194,18 +203,21 @@ Or what it was supposed to be...
 
 --newpage
 --heading ansible inventory for containers
+--- 
 --beginoutput
 - template: >
     src=inventory dest=/srv/docker/{{item}}/inventory
 --endoutput
 ---
 --heading templates/inventory
+--- 
 --beginoutput
 [local]
 localhost ansible_connection=local
 --endoutput
 ---
 --heading container orchestration (ugly and hackish)
+--- 
 --beginoutput
 - template: >
     src=plays/{{item}}.yml dest=/srv/docker/{{item}}/site.yml
@@ -214,11 +226,13 @@ localhost ansible_connection=local
 
 --newpage
 --heading dependencies for ansible/docker
+--- 
 --beginoutput
 - pip: name=docker-py  state=present
 --endoutput
 ---
 --heading OR
+--- 
 --beginshelloutput
 - git: >
     repo=https://github.com/dotcloud/docker-py.git
@@ -233,6 +247,7 @@ localhost ansible_connection=local
 
 --newpage
 --heading Lets build our containers
+--- 
 --beginoutput
 - docker_image: >
     path="/srv/docker/{{item}}"
@@ -265,6 +280,7 @@ AttributeError: 'NoneType' object has no attribute '_sock'
 ---
 
 --heading ssh to the host
+--- 
 --beginshelloutput
 $ for i in preciseansible mariadb nginx; do 
 $    docker build -t "${i}":latest /srv/docker/"${i}"/;
@@ -273,6 +289,7 @@ $ done
 
 --newpage
 --heading starting a container
+--- 
 --beginoutput
 - docker: >
     image=mariadb
@@ -284,6 +301,7 @@ $ done
 --beginshelloutput
 $ ansible-playbook meetup.yml --tags run 
 
+--- 
 PLAY RECAP ******************************************************************** 
 --color green
 niemiecki                  : ok=3    changed=1    unreachable=0    failed=0 
@@ -292,15 +310,18 @@ niemiecki                  : ok=3    changed=1    unreachable=0    failed=0
  
 --newpage 
 --heading restarting a container
+--- 
 --beginoutput
 - docker: >
     image=nginx name=www state=restarted
     command="/usr/sbin/nginx"
 --endoutput
+--- 
 --beginshelloutput
 $ ansible-playbook meetup.yml --tags run 
 $ ansible niemiecki -a 'docker ps' | awk '{print $1,$3}'|tail -n3
 
+--- 
 250452ed7d25 /usr/bin/mysqld_safe
 --endshelloutput
 ---
@@ -310,8 +331,11 @@ $ ansible niemiecki -a 'docker ps' | awk '{print $1,$3}'|tail -n3
 --color black
 
 --newpage
+--heading lets ensure that the image is present
+--- 
 --beginshelloutput
 $ ansible niemiecki -m docker -a "image=nginx name=www state=present command='/usr/sbin/nginx'"
+--- 
 niemiecki | FAILED >> {
     "changed": true, 
     "failed": true, 
@@ -322,12 +346,15 @@ niemiecki | FAILED >> {
 --endshelloutput
 
 --newpage
+--heading docker=disposable... so lets drop it and create again.
+--- 
 --beginshelloutput
 $ ansible niemiecki -m docker -a "image=nginx name=www state=absent command='/usr/sbin/nginx'"
 $ ansible niemiecki -m docker -a "image=nginx name=www state=present command='/usr/sbin/nginx'"
 
 $ ansible niemiecki -a 'docker ps'|awk '{print $1,$3}'|tail -n3
 
+--- 
 --color green
 c729e72ae8c7 /usr/sbin/nginx
 --color black
