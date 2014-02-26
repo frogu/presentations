@@ -1,16 +1,20 @@
 --bgcolor white
 --fgcolor black 
 --author Łukasz Proszek <lukasz(at)proszek(dot)info> 
---title Ansible for your VPS. 
+--title Docker+Ansible for your VPS. 
 --date today 
 --footer Kraków DevOps Meetup #3
 ---
 --center working title: ansible + docker + mariadb + ttrss
+---
 
+--center proper title:
+---
+--title Ansible+Docker we're not there yet.
 
 
 --- 
---center In other words 
+--center or in other words 
 --boldon 
 --center "How I lost most of my hair." 
 --boldoff 
@@ -167,6 +171,11 @@ Or what it was supposed to be...
 * fpm (preciseansible with php-fpm installed)
 ---
 * ttrss (nginx with ttrss installed)
+---
+
+--color red
+--center no demo today :(
+--color black
 
 --newpage
 --heading container configuration directories
@@ -324,6 +333,12 @@ c729e72ae8c7 /usr/sbin/nginx
 --color black
 250452ed7d25 /usr/bin/mysqld_safe
 --endshelloutput
+
+--newpage
+--sethugefont starwars
+--color yellow
+--huge not yet :(
+--color black
 
 --newpage
 --sethugefont eftiwall
