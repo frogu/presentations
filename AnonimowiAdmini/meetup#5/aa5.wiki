@@ -1,0 +1,169 @@
+
+<[autotemplate]
+usepackage=[utf8]{inputenc}
+title={Selenium for OPS}
+subtitle={Admins Anonymous meetup \#5 }
+date={2014-06-17}
+author={Łukasz Proszek}
+[autotemplate]>
+
+==== Background ====
+
+*+<1->{You're a BOFH at GlobalFskcup Ltd.}
+
+*+<2->{Everyday you deal with numerous incidends.}
+
+*+<3->{You have to !seek approval! and/or !log! every change made.}
+
+*+<4->{The Head of IT has his favorite tool for that}
+
+*+<5->{!MacroHard PointShare form!}
+
+*+<6->{Rich editor filled form, with sparkling format choosers.}
+
+*+<7->{Bells and whistles included}
+
+
+==== The soft problem ====
+
+*<1->{Filling the form takes 5-20 minutes each time}
+
+*<2->{No PFY available to do the job}
+
+*<3->{Keeping templates in a text document... sooooo 1990}
+
+*<4->{Browser plugins - does not recognize all of provided inputs}
+
+*<5->{curl - yeah right, like I have time for that}
+
+==== Selenium - basics====
+
+<[code][language=Python,style=basic]
+from selenium import webdriver
+[<2-4>driver = webdriver.Firefox()]
+[<3-4>driver.get("http://google.com")]
+[<4>driver.find_element_by_id("...")]
+[code]>
+
+====  how to identify element --> inspect element ====
+
+<[center]
+<<<img/google-search1.png,width=\textwidth>>>
+[center]>
+
+==== Selenium - interact with webelement ====
+
+<[code][language=Python,style=basic]
+from selenium import webdriver
+driver = webdriver.Firefox()
+driver.get("http://google.com")
+[[<2>fld=driver.find_element_by_id('....')][<3-4>fld=driver.find_element_by_id('gbqfq')]]
+[<4>fld.send_keys('Anonimowi Admini')]
+[code]>
+
+==== Something more complicated ====
+
+<[center]
+<<<img/cr-new.png,width=0.8\textwidth>>>
+[center]>
+
+==== Show me the code ====
+
+<[center]
+<<<img/cr-code1.png,width=1.0\textwidth>>>
+[center]>
+
+==== What the fsck? ====
+
+<[center]
+<<<img/cr-code2.png,width=1.0\textwidth>>>
+[center]>
+
+==== Problem? HTML injection ====
+
+*<1->{the id is a hash of something... different everytime}
+*<2->{Let's get the RichEditor's class}
+<[code][language=Python,style=basic]
+[<3-8>e = "table.ms-formtable > tbody >]
+[<4-8>     tr:nth-of-type(7) > td.ms-formbody >]
+[<5-8>     span\[dir='none'\] > div > ]
+[<6-8>     div:nth-of-type(2)"]
+[<7-8>c=driver.find_element_by_css_selector(e)]
+[<8>          .get_attribute("class")]
+[code]>
+
+==== Problem? HTML injection ====
+
+*{We can not use @webdriver.send\_keys()@ on that... it's inside the html code}
+*<2->{{We have to inject HTML with javascript}}
+<[code][language=Python,style=basic]
+[<3-7>JS="document.getElementsByClassName({0})\[{1}\]]
+[<4-7>     .innerHTML='{2}'".format(]
+[<5-7>        CLASS_NAME, INDEX,]
+[<6-7>        "<marquee> WTF </marquee>"]
+[<7>     )]
+[<7>driver.execute_script(JS)]
+[code]>
+
+==== Clicking a radio button ====
+<[center]
+<<<img/radio.png,height=4em>>>
+[center]>
+
+<[code][language=Python,style=basic]
+driver.find_element_by_css_selector(
+  "input\[type='radio'\]\[value='{0}'\]".format(
+        "Approved by the CEO"
+        )
+[[<1>  )][<2>  ).click()]]
+[code]>
+
+==== Selecting a dropdown option ====
+
+<[center]
+<<<img/option.png,height=4em>>>
+[center]>
+<[code][language=Python,style=basic]
+driver.find_element_by_css_selector(
+  "option\[value='{0}'\]".format(value)
+[[<1>  )][<2>  ).click()]]
+[code]>
+
+==== Sending the form ====
+
+<[center]
+<<<img/save.png,height=4em>>>
+[center]>
+<[code][language=Python,style=basic]
+driver.find_elements_by_css_selector(
+    "input\[value='Save'\]\[type='button'\]"
+[[<1>  )][<2>  ).click()]]
+[code]>
+
+==== Many python, such win ====
+
+*208 lines of Python
+*virtualenv
+*selenium for browser automation (@pip install selenium@)
+*click for easy commandline (@pip install click@)
+*path.py just becaue (@pip install path.py@)
+*YAML for templates (@pip instal pyYaML@)
+*keepass for credentials (@pip install keepass@)
+
+==== outcome, further plans, other uses ====
+Outcome
+*It took 3hrs to write
+*It eared it's keep after one day
+
+Further plans
+*@webdriver.PhantomJS()@ for headless operation
+*@ansible@ integration
+
+Other uses
+*e.g. testing how long it takes the user to perform some action
+
+==== Thank You ====
+
+* @wiki2beamer@ - latex-beamer made easy
+* @impressive@ - pdf presentations with sugar added
+* http://github.com/frogu/presentations
