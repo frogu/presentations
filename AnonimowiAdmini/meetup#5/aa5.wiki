@@ -142,25 +142,25 @@ driver.find_elements_by_css_selector(
 
 ==== Many python, such win ====
 
-*208 lines of Python
-*virtualenv
-*selenium for browser automation (@pip install selenium@)
-*click for easy commandline (@pip install click@)
-*path.py just becaue (@pip install path.py@)
-*YAML for templates (@pip instal pyYaML@)
-*keepass for credentials (@pip install keepass@)
+* 208 lines of Python
+* virtualenv
+* selenium for browser automation (@pip install selenium@)
+* click for easy commandline (@pip install click@)
+* path.py just becaue (@pip install path.py@)
+* YAML for templates (@pip instal pyYaML@)
+* keepass for credentials (@pip install keepass@)
 
 ==== outcome, further plans, other uses ====
 Outcome
-*It took 3hrs to write
-*It eared it's keep after one day
+* It took 3hrs to write
+* It eared it's keep after one day
 
 Further plans
-*@webdriver.PhantomJS()@ for headless operation
-*@ansible@ integration
+* @webdriver.PhantomJS()@ for headless operation
+* @ansible@ integration
 
 Other uses
-*e.g. testing how long it takes the user to perform some action
+* e.g. testing how long it takes the user to perform some action
 
 ==== Thank You ====
 
