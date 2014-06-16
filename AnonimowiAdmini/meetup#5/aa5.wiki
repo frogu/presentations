@@ -151,6 +151,7 @@ driver.find_elements_by_css_selector(
 * keepass for credentials (@pip install keepass@)
 
 ==== outcome, further plans, other uses ====
+
 Outcome
 * It took 3hrs to write
 * It eared it's keep after one day
