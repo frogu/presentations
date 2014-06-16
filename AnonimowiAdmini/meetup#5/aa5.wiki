@@ -61,6 +61,11 @@ driver.get("http://google.com")
 [<4>fld.send_keys('Anonimowi Admini')]
 [code]>
 
+==== badumm! tsss! ====
+
+<[center]
+<<<img/badum.png,width=0.8\textwidth>>>
+[center]>
 ==== Something more complicated ====
 
 <[center]
