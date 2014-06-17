@@ -151,7 +151,7 @@ driver.find_elements_by_css_selector(
 * virtualenv
 * selenium for browser automation (@pip install selenium@)
 * click for easy commandline (@pip install click@)
-* path.py just becaue (@pip install path.py@)
+* path.py just because (@pip install path.py@)
 * YAML for templates (@pip instal pyYaML@)
 * keepass for credentials (@pip install keepass@)
 
