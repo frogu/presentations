@@ -4,7 +4,7 @@ usepackage=[utf8]{inputenc}
 title={Selenium for OPS}
 subtitle={Admins Anonymous meetup \#5 }
 date={2014-06-17}
-author={Łukasz Proszek}
+author={Łukasz Proszek \newline\small{\url{lukasz@proszek.info}}}
 [autotemplate]>
 
 ==== Background ====
