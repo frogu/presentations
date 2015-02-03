@@ -1,0 +1,152 @@
+
+<[autotemplate]
+usepackage=[utf8]{inputenc}
+title={Unprivileged LXC}
+subtitle={Admins Anonymous meetup \#6 }
+date={2015-02-03}
+author={Łukasz Proszek \newline\small{\url{proszek@gmail.com}}}
+[autotemplate]>
+
+==== Welcome ====
+
+<[center]
+<<<img/bin-zsh.png,width=\textwidth>>>
+[center]>
+
+==== Background ====
+
+*+<1->{You're a BOFH at GlobalFskcup Ltd.}
+
+*+<2->{You have to deal with developers.}
+
+*+<3->{Developers want !their own! containers.}
+
+*+<4->{You !need! to spin up clean containers for every build}
+
+*+<5->{You !don't! want to give root to your developers}
+
+*+<6->{!seriously! !you! !do! !not\!!}
+
+
+==== "Normal" LXC ====
+
+*<1->{Needs root access}
+
+*<2->{UID 0 in container is basically UID 0 on the host}
+
+*<3->{Implications?}
+
+==== Consider this example ====
+
+*<1->{Host on the left: @tail -f /var/log/syslog@}
+
+*<2->{Guest on the right}
+
+*<3->{<<<img/s_sysrq.png,width=\textwidth>>>}
+
+*<4->{Already fixed in current versions}
+
+*<5>{Works on Debian obviously}
+
+==== Another example ====
+
+*<1->{@mknod /dev/sda1 b X Y@}
+
+*<2->{@mount /dev/sda1 /mnt/host\_fs@}
+
+*<3->{already fixed in 1.0.1}
+
+*<4->{Q: Which distributions ship with 0.8?}
+
+==== Implications ====
+
+*<1->{Potentially can harm host}
+
+*<2->{Potentially can read and/or modify other containers}
+
+*<3->{<<<img/kaboom-awwww-lt3-rico-0.png,width=0.9\textwidth>>>}
+
+
+==== Unpriviliged LXC ====
+<[center]
+<<<img/restrict.jpg,width=0.9\textwidth>>>
+[center]>
+
+==== Unpriviliged LXC - Prerequisites ====
+
+*<1->{Network configuration: @/etc/lxc/lxc-usernet@}
+<[code][style=basic]
+# USERNAME  TYPE  BRIDGE  COUNT
+anonymous   veth  lxcbr0  10
+[code]>
+
+*<2->{host ID mapping: @/etc/subuid /etc/subgid@}
+<[code][style=basic]
+anonymous:100000:65536
+anonymous:100000:65536
+[code]>
+
+*<3->{guest ID mapping: @/home/anonymous/.config/lxc/default.conf@}
+<[code][style=basic]
+lxc.include = /etc/lxc/default.conf
+#type sourceID subID subIDCount
+u 0 100000 65536
+g 0 100000 65536
+[code]>
+
+==== Unprivileged LXC - Limitations ====
+
+*<1->{You can't use @mknod@.}
+
+*<2->{No @loop@ mounts}
+
+*<3->{That means... no bootstrap}
+
+
+==== Unprivileged LXC - Installation ====
+
+*<1->{Can be created by non root users}
+
+*<2->{Pre-built LXC containers}
+
+*<3->{@lxc-create -t download -n aa6@}
+
+*<4->{grant access to the rootfs: e.g. ACL @u:100000:x@ }
+
+*<5->{UID 0 is mapped to non-zero}
+
+*<6->{@100000    5707  0.0  0.0  10664  1608 ?        Ss   01:27   0:00 init [3]@}
+
+
+==== Modyfying the container from host ====
+
+<[code][style=basic,title=lxc-usernsexec]
+lxc-usernsexec \
+echo "127.0.1.1 theres_no_place_like_home" \
+> /home/anonymous/.local/share/lxc/aa6/rootfs/etc/hosts
+[code]>
+
+
+==== Example usage ====
+
+With some tweaking (root mknod) I use unpriv LXC to:
+
+*<2->{Connect to company VPN.}
+
+*<3->{Launch firefox with conferencing addon (e.g. bluejeans that breaks eclipse).}
+
+*<4->{Launch eclipse instance.}
+
+*<5->{ Test deployment process.}
+
+
+==== Thank You ====
+
+* https://www.stgraber.org/2014/01/17/lxc-1-0-unprivileged-containers/
+* https://bugs.launchpad.net/lxc/+cve
+* http://blog.docker.com/2013/08/containers-docker-how-secure-are-they/
+* http://lwn.net/Vulnerabilities/586062/
+* http://mattoncloud.org/2012/07/16/are-lxc-containers-enough/
+* http://www.bpfh.net/simes/computing/chroot-break.html
+
+* http://github.com/frogu/presentations
