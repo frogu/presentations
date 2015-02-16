@@ -10,9 +10,9 @@ slideshare: jc13.wiki
 	sed -i "s#<[0-9]-[0-9]>##g" slideshare.wiki
 	sed -i "s#\[\[.*\]\(\[.*\)\]#\1#" slideshare.wiki
 	sed -i 's#^\[\(.*\)\]$$#\1#' slideshare.wiki
-	sed "s#jc13#slideshare#" presentation.latex > unprivileged_lxc.latex
+	sed "s#jc13#slideshare#" presentation.latex > docker_for_developers.latex
 	wiki2beamer slideshare.wiki > slideshare.latex
-	pdflatex unprivileged_lxc.latex
+	pdflatex docker_for_developers.latex
 
 clean:
 	rm -f *.toc *.snm *.out *.nav *.log *.aux
