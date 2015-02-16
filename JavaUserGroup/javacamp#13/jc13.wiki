@@ -1,0 +1,116 @@
+
+<[autotemplate]
+usepackage=[utf8]{inputenc}
+title={Docker on a developer's desktop}
+subtitle={JavaCamp \#13 }
+date={2015-02-12}
+author={Łukasz Proszek \newline\small{\url{proszek@gmail.com}}}
+[autotemplate]>
+
+==== Welcome ====
+
+<[center]
+<<<img/docker.png,width=\textwidth>>>
+[center]>
+
+
+==== Common theme ====
+
+*+<1->{It runs on my machine.}
+*+<2->{We !don't! ship your machine\!}
+*+<3->{Windows on a workstation, Linux on the server}
+*+<4->{Different configuration on each env}
+*+<5->{Technical gap between teams:}
+*+<6->{don't expect a tester to configure a JDBC driver}
+*+<7->{don't expect your sysadmin to debug your code}
+*+<8->{don't expect your developer to configure the routing}
+*+<9->{why does it build on machine A and not on B nor C}
+
+==== Virtualization ====
+
+*+<1->{A resource hog}
+*+<2->{Disk}
+*+<3->{Memory}
+*+<4->{Slightly Awkward to configure}
+*+<5->{Once set up, begins to deteriorate}
+*+<6->{PITA to redeploy a clean environment}
+*+<7->{I'm quite confident that I will spin up a full docker env in the time that takes you to spin up one vmdk.}
+
+==== Docker FTW  ====
+
+<[center]
+<<<img/docker-death.jpg,width=\textwidth>>>
+[center]>
+
+==== Common Advantages ====
+
+*+<1->{All containers share the same base image - less download}
+*+<2->{Updates are just diff snapshots}
+*+<3->{Semi platform independent}
+*+<4->{Provides a comfortable level of isolation}
+
+==== Docker is like a Ogre: it has layers ====
+<[center]
+<<<img/docker-layers.png,width=\textwidth>>>
+[center]>
+==== On a desktop? ====
+
+*+<1->{Run insecure applications in an isolated, yet seamless environment}
+*+<2->{Run the same scenario on the same configuration, on different app versions, at the same time}
+*+<3->{<<<img/docker-all-the-things.png,width=0.5\textwidth>>>}
+
+==== Webbrowser with an insecure plugin - Dockerfile ====
+
+<[code]
+FROM debian
+RUN apt-get update && apt-get install -y iceweasel wget
+RUN export uid=1000 gid=1000 
+RUN mkdir -p /home/developer 
+RUN echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd 
+RUN echo "developer:x:${uid}:" >> /etc/group && \
+RUN chown ${uid}:${gid} -R /home/developer
+RUN wget  --no-check-certificate https://swdl.bluejeans.com/skinny/bjnplugin_2.90.399.5-1_amd64.deb 
+RUN dpkg -i bjnplugin_2.90.399.5-1_amd64.deb
+USER developer
+ENV HOME /home/developer
+CMD /usr/bin/iceweasel
+[code]>
+
+==== Webbrowser with an insecure plugin - Running ====
+<[code]
+docker build -t bj - < Dockerfile.bj 
+docker run \ 
+    --env=DISPLAY=$DISPLAY \
+    --volume=/tmp/.X11-unix:/tmp/.X11-unix  \
+    --rm \
+    --tty \
+    bj
+[code]>
+
+==== Endless possibilities ====
+
+==== Exaplme docker code ====[fragile]
+<[code][style=basic]
+func init() {
+    dispatch = map\[string\]func(string) .... 
+        "user"      : parseString,
+        "onbuild"   : parseSubCommand,
+        "workdir"   : parseString,
+        "env"       : parseEnv,
+        "maintainer": parseString,
+        "from"      : parseString,
+        "add"       : parseMaybeJSONToList,
+        "copy"      : parseMaybeJSONToList,
+        "run"       : parseMaybeJSON,
+        "cmd"       : parseMaybeJSON,
+        "entrypoint": parseMaybeJSON,
+        "expose"    : parseStringsWhitespaceDelimited,
+        "volume"    : parseMaybeJSONToList,
+        "insert"    : parseIgnore,
+}
+[code]>
+Thanks \@GrzegorzNosek
+==== Thank You ====
+<[center]
+<<<img/qa.png,width=\textwidth>>>
+[center]>
