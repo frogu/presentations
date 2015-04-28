@@ -1,0 +1,265 @@
+#! /usr/bin/env pinpoint
+[text-align=center]
+[font=Inconsolata 50px]
+--- [url3.jpeg] [fill]
+# title slide
+"temat w opracowaniu"
+#Z pamiętnika młodego zielarza
+#czyli
+#kwiatki zebrane
+
+
+
+
+@lukaszproszek
+Anonimowi Admini #7
+Kraków, 2015-04-28
+--- [no-clue-what-my-job-is.jpg][fill]
+about:
+System Administrator
+Python enthusiast
+Ansible evangelist
+Strongly believes in Pasta and Beer
+---[random-pic-14.jpg][fill][top]
+Everything mentioned here really happened
+somewhere, sometime in a hypothetical company
+to some poor sod...
+--- [stupidity_13-W630.jpg] [fill] [top]
+Grey's law
+
+Any sufficiently advanced incompetence 
+is indistinguishable from malice.
+--- [popcorn-0.jpg][fill]
+
+--- [text-align=left] [howard.jpg] [fill] [bottom]
+# Instalator pewnego drogiego pakietu obliczeniowego
+# Odmawia działania z nieuprzywilejownaego użytkownika
+# Następnie robi rm $1/$2, NIE sprawdzając, czy w ogóle są zdefiniowane
+if [[ $UID != 0 ]]; then
+    echo "You must be root to run this script"
+    exit 1
+fi
+rm -rf $1/$2
+--- [backup-test.jpg][fill]
+# case: olaboga padła jira
+# mamy backup!
+# z września... a jest luty
+# backup zrobiony jirowym dumpem xmlowym...
+# niekompletny, bo OOM
+For production use or large JIRA installations, 
+it is strongly recommended that you use native 
+database-specific tools instead of the XML 
+backup service. XML backups are not guaranteed 
+to be consistent, as the database may be updated 
+during the backup process. Inconsistent backups 
+are created successfully
+without any warnings or error messages, 
+but fail during the restore process
+
+
+--- [watchdog.jpg] [fill]
+# a co jakbym chciał odpalić dwa naraz?
+# a co ze sprzątaniem po sobie?
+echo "1" > /tmp/watchdog.txt
+--- [text-align=left] [backup.jpg] [fill]
+# przy apdejcie aplikacji trzeba zachować konfigurację
+# najlepiej to zrobić kopiując starą do /tmp
+# a następnie przywrócić ją w ten sam sposób...
+# a cóżby mogło pójść źle...?
+echo "Backup confguration"
+rm -rf /tmp/conf > /dev/null 2>&1
+cp -a /opt/my_app/conf /tmp
+echo "Done"
+--- [text-align=left] [backup.jpg] [fill]
+# restore
+echo  "Restoring  configuration..."
+cp -a /tmp/conf /opt/my_app
+echo "Done"
+--- [text-align=left] [backup.jpg] [fill]
+# surprise motherfucker!
+configuration size = 1Gb
+/tmp size = 16Mb
+--- [choices.jpg] [fill] [text-align=left]
+# wycinek konfiguracji...
+# takw iele opcji do wyboru
+# szkoda, że to nie robi zupełnie nic.
+case ${ENVIRONMENT} in
+    PREPROD)
+      NFSLOCATION=/dir/location; ENVIRONMENT=PREPROD
+    TEST)
+      NFSLOCATION=/dir/location; ENVIRONMENT=TEST
+    INT)
+      NFSLOCATION=/dir/location; ENVIRONMENT=INT
+    PROD1)
+      NFSLOCATION=/dir/location; ENVIRONMENT=PROD1
+    PROD2)
+      NFSLOCATION=/dir/location; ENVIRONMENT=PROD2
+    PROD3)
+      NFSLOCATION=/dir/location; ENVIRONMENT=PROD3
+    DEV)
+      NFSLOCATION=/dir/location; ENVIRONMENT=DEV
+esac
+--- [redundant.jpg] [text-align=left] [fill]
+# a możeby ports=(81 82 83 84) i slice'ami operować?
+function single(){ PORT=81 }
+function double(){ PORT=81 82}
+function triple(){ PORT=81 82 83}
+function quadruple(){ PORT=81 82 83 84}
+--- [rockkey.jpg] [fill]
+# Jak sobie ułatwić zarządzanie? 
+# a użyć klucza ssh co ma wszędzie bezpośrednio na roota wstęp.
+# następnie nie pierdolić się tylko go wgrać na ogólnodostępny zasób dyskowy
+# trzymaj mi piwo
+SSHOPT="-i /public_dir/on_public_share/secret_key"
+
+--- [redhead-forbidden.jpg]  [fill] [text-align=left]
+# oczywiśćie wszyscy operują bezpośrednio z roota
+# jak zabezpieczyć się przed przypadkowym skasowaniem
+# ważnych danych?
+# zdefiniować funkcję "secure_delete", która sprawdzi
+# czy w ścieżce nie ma czegoś ciekawego
+# polagać na tym, że każdy skrypt użycje tej funkcji...
+
+FORBIDDENLIST=(/ /usr /root /home /etc
+/var /tmp /srv /sys /selinux /scripts
+/sbin /proc /opt /mnt /media /a /lib32
+/lib /export /dev /boot /bin /vol /tftpboot
+/system /storage /storage2 /platform
+/net /kernel /home/kernel /devices /data
+/data1 /data2 /data01 /data01 /cdrom)
+
+...
+echo -e "${VARIABLE} contains forbiden string"
+--- [donothing.jpg] [fill] [text-align=left]
+# "under construction"
+function datetounix(){
+  echo
+}
+--- [text-align=left] [wheel.png] [fill]
+# administratorzy... czasem lubią wymyślać koło na nowo.
+# jak ze ścieżki wyciągnąć nazwę pliku?
+# oczywiście, że napisać własną wersję basename'a
+
+\#input: /etc/passwd, output: passwd
+
+function extractfilename(){
+  local extractfilenameFN=
+        $(removeslashes ${1})
+  local extractfilenameDELIM=
+        `echo ${_extractfilenameFN}
+        | tr -cd '/' | wc -m`
+  local extractfilenameFILENAME=
+        `echo ${extractfilenameFN}
+        |cut -d/ -f$[extractfilenameDELIM+1]`
+echo ${extractfilenameFILENAME}
+}
+# basename /etc/passwd anyone?
+--- [a-mc-random-30.jpg] [fill] [top] [text-align=left]
+# developerzy... jak zmienić case stringa w swoim języku programowania?
+# najprościej odpytać o to bazę danych.
+Changing string case IN CODE:
+
+SELECT 
+UPPER( <i>SOME_VARIABLE</i> )
+FROM DUAL
+--- [backend.jpg] [fill] [text-align=left]
+# developerzy, którzy pokażą jak się to robi!
+# wywalenie crlf. najlepiej to napisać samemu
+# dos2unix anyone? 
+# bonus points: co to zrobi z plikami ze starych maków?
+
+def convert_win_to_unix_line_endings(
+  file_path):
+\#NOTE: in order to run \r you have 
+\# to write \\r in shell 
+\#and for some reason you to have to 
+\# additionally escape it in in fabric 
+\# so we get: \\\\r.
+\# What's more you have to 
+\# escape it again
+\# in Python string 
+\# and we finally get: \\\\\\\\r
+
+sudo("sed -i s/\\\\\\\\r// %s" % file_path)
+
+--- [use-your-tools-1.jpg][fill][text-align=left]
+# developerzy... javy... zmieniający wartości w xmlu.
+# so wrong on so many levels...
+
+def _configure_tomcat7(
+  install_dir_path, 
+  http_port, 
+  connector_port, 
+  shutdown_port):
+    sudo("sed -i 's/8080/%d/' %s/conf/server.xml" % (
+        http_port, install_dir_path) )
+    sudo("sed -i 's/8009/%d/' %s/conf/server.xml" % (
+        connector_port, install_dir_path) )
+    sudo("sed -i 's/8005/%d/' %s/conf/server.xml" % (
+        shutdown_port, install_dir_path) )
+
+--- [x9s8evusopbf0p1ntrvc.jpg][fill][font=Monospace 100px] 
+# bo build nam nie przechodził, a termin gonił...
+
+def _test():
+    pass
+
+--- [I-have-no-idea-what-I’m-doing.jpg][fill][text-align=left] [font=Monospace 100px]
+# nikt nie ogarniał całego tego burdelu z su, su minus, sudo, ssh i całej reszty
+# 
+\# it's madness with paths for 
+\# different users and such options:
+\# sudo su, sudo -i, su -, su
+\# that is why we add variables 
+\# to two places
+\# due to sudo issues 
+\# (resetting PATH by /etc/sudoers) 
+\# we have to add PATH 
+\# to /root/.profile as well
+
+ ENVIRONMENT_FILE = '/etc/environment'
+ PROFILE_FILE     = '/etc/profile'
+ INITIAL_PATH     = '/usr/local/bin:/usr/bin:/bin'
+
+
+---[check-engine.jpg]
+def is_ubuntu():
+    return run(
+        "uname -a | grep Ubuntu | wc -l"
+      ) == "1"
+--- [date.jpg] [fill]
+# jaki jest poprzedni miesiąc... przez większość roku działa ok.
+# a co z 29? 30? 31?
+prev_month=`date -d "-28 day" '+%b'`
+--- [tire.jpg][fill]
+# jak zapewnić żeby katalog zawsze miał odpowiedniego właściciela
+*/1 * * * *
+  /bin/chown -R nagios:www-data /var/lib/nagios3; 
+  /bin/chmod -R 777 /var/lib/nagios3 
+  >/dev/null 2>&1
+
+---[25-random-cat-behaviors-finally-explained-01.jpg] 
+# a jak już jesteśmy przy katalgach.FHS...
+log in ./bin
+binaries in ./etc
+pidfiles (bleh!) in ./log
+configs in /etc/init.d
+nfs mounts in /opt
+...
+
+---[cocaine13.png][fill] 
+# a jak już przy mountach
+fixing diskspace... with symlinks
+/opt/file1/dir1 -> /opt/file2/dir1
+/opt/file2/dir1 -> /opt/file5/dir1
+# notice leftoverdata in file3, and neeruser file4 symlink
+/opt/file3/dir1 -> /opt/file4/dir1
+
+find detected a symlik loop... 6*10<sup>5</sup> times
+
+--- [trick-question.png] [top] [font=Monospace 150px]
+QUESTIONS?
+
+--- [insanity.jpg] [top-right] [fill][font=Monospace 100px] 
+THE
+END
