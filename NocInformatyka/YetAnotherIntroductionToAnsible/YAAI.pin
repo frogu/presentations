@@ -1,0 +1,241 @@
+#! /usr/bin/env pinpoint
+[text-align=left]
+[font=Inconsolata 50px]
+[noc.png]
+--- [cow.png][text-align=center]
+Yet Another
+Ansible Introduction
+
+
+@lukaszproszek
+Noc Informatyka #9
+Kraków, 2015-05-29
+--- [no-clue-what-my-job-is.jpg][text-align=center]
+about:
+System Administrator
+Python enthusiast
+Ansible evangelist
+Strongly believes in Pasta and Beer
+
+---
+http://docs.ansible.com/playbooks_best_practices.html
+
+production        # inventory file for prod
+stage             # inventory file for stage
+group_vars/
+   group1         # here we assign variables
+                  # to particular groups
+host_vars/
+   hostname1      # host specific variables
+site.yml          # master playbook
+webservers.yml    # playbook for webserver tier
+roles/
+    common/       # roles
+    monitoring/   # 
+
+--- [font=Inconsolata 100px][men-in-black.jpg][text-align=center]
+Forget That!
+
+---
+Keep your roles separate from your inventory
+
+roles/          # roles repository
+environments/   # environment repository
+    production/
+        prod1/
+        prod2/
+    staging/
+        stage1/
+        stage2/
+
+---
+Keep your group and host vars 
+alongside the inventory
+
+environments/
+    production/
+        prod1/
+            inventory
+            group_vars/
+            host_vars/
+
+---
+specify the environment during runtime
+
+ansible-playbook -i \
+    environments/production/prod1/inventory
+
+(or make an alias for that)
+
+This way you will not run a playbook 
+on a wrong evironment
+
+---
+Don't keep playbooks in the main directory.
+Use a tree structure:
+
+plays/
+    monitoring/
+        set_up_wtf_mon.yml
+    deploy/
+        application1.yml
+    security/
+        add_ssh_user.yml
+
+---
+Add an environment variable
+pointing to the roles' root dir.
+
+export ANSIBLE_ROLES_PATH=\
+    ~/git/orchestration/roles
+
+That way your playbooks will 
+always see roles that they use.
+
+---
+Don't be afraid of writing
+your own jinja filters.
+
+It's really simple.
+---
+export  ANSIBLE_FILTER_PLUGINS=
+    ~/git/orchestration/plugins/filter_plugins
+
+---
+def enc_rot13( s ):
+  return s.encode('rot13')
+
+class FilterModule(object):
+  def filters(self):
+    return {
+        'rot13' : enc_rot13
+    }
+---
+
+Ansible is easily extensible.
+Write your own modules!
+
+---
+Arguments are passed as a file.
+# we have to read that file in
+with open(sys.argv[1]) as f:
+    args=f.read()
+
+---
+We should intelligently split 
+that string into a list
+
+args=shlex.split(args)
+
+---
+Key, value pairs would be nice
+
+args=[x.split('=',1) for z in args]
+args={k:v for k,v in args}
+
+---
+Modules return nothing. 
+They print json to stdout.
+ONLY disctionaries!
+
+print json.dumps({
+    'changed': True,
+    'foo': 'bar'
+})
+---
+Modules can suplement 
+default facts 
+known about the node
+
+just add the 'ansible_facts' key
+to json
+---
+{
+    "changed": True,
+    "hack_time": {
+        "ready": True
+    }
+}
+---
+Now that we know how it is done...
+
+--- [font=Inconsolata 100px][men-in-black.jpg][text-align=center]
+Forget That!
+
+---
+from ansible.module_utils.basic import *
+
+module = AnsibleModule(
+    argument_spec= {
+        supports_check_mode: False,
+        state: {
+            default:'present',
+            choices: ['present','absent']
+        },
+        foo: bar
+    }
+)
+---
+
+module.exit_json(changed=True, noc='informatyka')
+
+module.fail_json(msg="it's a trap")
+---
+Our first module
+from ansible.module_utils.basic \
+    import *
+module = AnsibleModule(
+    argument_spec={}   )
+def main():
+    module.exit_json(
+        changed=False,
+        noc='informatyka'
+        )
+main()
+---
+github.com » ansible/hacking/test-module -m noc
+***********************************
+RAW OUTPUT
+{"changed": false, "noc": "informatyka"}
+
+PARSED OUTPUT
+{
+        "changed": false, 
+        "noc": "informatyka"
+}
+---
+but modules DO NOT have to be python
+
+\#!/bin/bash
+echo '{ "changed": false, "noc": "informatyka" }'
+
+---
+ansible/hacking/test-module -m noc2 
+
+***********************************
+RAW OUTPUT
+{ "changed": false, "noc": "informatyka" }
+
+
+***********************************
+PARSED OUTPUT
+{
+        "changed": false, 
+        "noc": "informatyka"
+}
+
+---
+A directory is also a file, so we move to:
+
+production/   # inventory DIRECTORY 
+    webservers
+    cache
+    monitoring
+    wtf
+    omg
+---  [top] [font=Monospace 150px]
+QUESTIONS?
+
+---  [top-right] [fill][font=Monospace 100px] 
+THE
+END
