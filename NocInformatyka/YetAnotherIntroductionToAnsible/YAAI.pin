@@ -8,6 +8,8 @@ Ansible Introduction
 
 
 @lukaszproszek
+frogu@freenode
+
 Noc Informatyka #9
 Kraków, 2015-05-29
 --- [no-clue-what-my-job-is.jpg][text-align=center]
@@ -16,6 +18,70 @@ System Administrator
 Python enthusiast
 Ansible evangelist
 Strongly believes in Pasta and Beer
+
+---[font=Inconsolata 100px]
+Usual intro
+---
+All you need is 
+SSH connection to the remote host
+
+Don't believe the Internets that say
+that you need python.
+
+---
+You can install it as a first task
+
+ansible 
+    all
+    -m raw 
+    -a "apt-get -qqy install python"
+---
+Inventory file, simple ini-style:
+
+host1.fqdn
+host1 ansible_ssh_host=10.0.0.1
+10.0.1.99
+
+---
+Invnetory groups:
+
+[group1]
+host1
+host2
+
+[group2]
+...
+---
+roles/
+    role1/
+        tasks/main.yml
+        handlers/main.yml
+        meta/main.yml
+        vars/main.yml
+        defaults/main.yml
+        files/
+        templates/
+    role2/
+
+---
+Variables:
+
+host_vars/host1.fqdn.yml
+(group_vars/group/vars.yml)
+
+foo: bar
+baz:
+    - one
+    - two
+---
+playbooks:
+site.yml
+
+hosts:
+    - all
+roles:
+    - webserver
+    - { role: auth/users, name: root }
 
 ---
 http://docs.ansible.com/playbooks_best_practices.html
@@ -35,11 +101,11 @@ roles/
 
 --- [font=Inconsolata 100px][men-in-black.jpg][text-align=center]
 Forget That!
-
 ---
 Keep your roles separate from your inventory
 
 roles/          # roles repository
+
 environments/   # environment repository
     production/
         prod1/
@@ -47,6 +113,15 @@ environments/   # environment repository
     staging/
         stage1/
         stage2/
+---
+A directory is also a file, so we move to:
+
+production/   # inventory DIRECTORY 
+    webservers
+    cache
+    monitoring
+    wtf
+    omg
 
 ---
 Keep your group and host vars 
@@ -93,26 +168,92 @@ That way your playbooks will
 always see roles that they use.
 
 ---
+change the default dictionary
+update policy.
+
+Default: overwrite
+
+"better": 
+hash_behaviour=merge
+---
+vars precendence:
+
+» role/defaults
+» group_vars 
+» host_vars
+» role/vars 
+» {role: foo, var: bar}
+» playbook vars
+» --extra-vars="var=bar"
+» vars/
+» role dependencies
+» facts
+» register variables
+
+https://github.com/cookrn/ansible_variable_precedence
+---
+Use vault! 
+
+group_vars/all/database.yml
+db:
+    server: dbserver1
+    sid: prod
+    port: 1521
+
+ansible-vault edit 
+    group_vars/all/vault.yml
+
+db:
+    root:
+        password: 8.apud
+
+---
+templates (jinja):
+etc_hosts.j2
+
+{{ ansible_default_ipv4.address }} 
+    {{ ansible_hostname }} 
+    {{ ansible.fqdn }]
+    {{ inventory_hostname }}
+    {{ inventory_hostname.short }}
+
+---
+filters
+
+{{ my_var|upper }}
+
+{{ registered_var|changed }}
+
+{{ other_var|lower|rot13 }}
+
+---
+
 Don't be afraid of writing
 your own jinja filters.
 
 It's really simple.
 ---
-export  ANSIBLE_FILTER_PLUGINS=
-    ~/git/orchestration/plugins/filter_plugins
+export  
+    ANSIBLE_FILTER_PLUGINS=
+        ~/git/orchestration/
+        plugins/filter_plugins
 
 ---
+\# rot13.py
 def enc_rot13( s ):
   return s.encode('rot13')
 
-class FilterModule(object):
-  def filters(self):
+class FilterModule( object ):
+  def filters( self ):
     return {
         'rot13' : enc_rot13
     }
----
 
-Ansible is easily extensible.
+---[text-align=center]
+
+Ansible is 
+easily extensible.
+
 Write your own modules!
 
 ---
@@ -122,26 +263,35 @@ with open(sys.argv[1]) as f:
     args=f.read()
 
 ---
-We should intelligently split 
+split that into a list
+args = args.split()
+---
+intelligently split 
 that string into a list
 
-args=shlex.split(args)
+args = shlex.split( args )
 
 ---
 Key, value pairs would be nice
 
-args=[x.split('=',1) for z in args]
-args={k:v for k,v in args}
+args = [ 
+    x.split( '=', 1 ) 
+    for z in args ]
+
+args = {
+    k: v 
+    for k, v in args }
 
 ---
 Modules return nothing. 
 They print json to stdout.
-ONLY disctionaries!
 
 print json.dumps({
     'changed': True,
     'foo': 'bar'
 })
+
+ONLY dictionaries!
 ---
 Modules can suplement 
 default facts 
@@ -152,8 +302,10 @@ to json
 ---
 {
     "changed": True,
-    "hack_time": {
-        "ready": True
+    "ansible_facts" : {
+        "hack_time": {
+            "ready": True
+        }
     }
 }
 ---
@@ -161,6 +313,7 @@ Now that we know how it is done...
 
 --- [font=Inconsolata 100px][men-in-black.jpg][text-align=center]
 Forget That!
+too cumbersome...
 
 ---
 from ansible.module_utils.basic import *
@@ -170,16 +323,24 @@ module = AnsibleModule(
         supports_check_mode: False,
         state: {
             default:'present',
-            choices: ['present','absent']
+            choices: [
+                'present', 
+                'absent'
+                ]
         },
         foo: bar
     }
 )
 ---
+\# exit helpers
+module.exit_json(
+    changed=True, 
+    noc='informatyka'
+    )
 
-module.exit_json(changed=True, noc='informatyka')
-
-module.fail_json(msg="it's a trap")
+module.fail_json(
+    msg="it's a trap"
+    )
 ---
 Our first module
 from ansible.module_utils.basic \
@@ -193,7 +354,7 @@ def main():
         )
 main()
 ---
-github.com » ansible/hacking/test-module -m noc
+ ansible/hacking/test-module -m noc
 ***********************************
 RAW OUTPUT
 {"changed": false, "noc": "informatyka"}
@@ -207,6 +368,7 @@ PARSED OUTPUT
 but modules DO NOT have to be python
 
 \#!/bin/bash
+\# sudo rm -rf /
 echo '{ "changed": false, "noc": "informatyka" }'
 
 ---
@@ -224,15 +386,15 @@ PARSED OUTPUT
         "noc": "informatyka"
 }
 
----
-A directory is also a file, so we move to:
+--- 
+Don't write big monolithic roles.
+Carveout simpler roles 
+and use role dependencies.
 
-production/   # inventory DIRECTORY 
-    webservers
-    cache
-    monitoring
-    wtf
-    omg
+\# ttrss/meta/main.yml
+dependencies:
+    - { role: services/mariadb, user: ttrss }
+
 ---  [top] [font=Monospace 150px]
 QUESTIONS?
 
