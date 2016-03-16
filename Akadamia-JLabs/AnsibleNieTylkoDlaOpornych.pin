@@ -1,0 +1,738 @@
+#! /usr/bin/env pinpoint
+[text-align=center]
+[font=Inconsolata 50px]
+[white]
+[background.jpg]
+[shading-opacity=0.8]
+
+--- [cow.png][text-align=center]
+Ansible not only for Dummies
+# Ansible nie tylko dla opornych
+# czyli
+# zmień swoje nawyki
+
+@lukaszproszek
+
+Akadamia J-Labs
+Kraków, 2016-03-15
+
+--- [no-clue-what-my-job-is.jpg][text-align=right][bottom-right]
+about:
+Senior DevOps Engineer
+@ Lumesse
+Python enthusiast
+Ansible evangelist
+
+# Absolwent WFAiIS
+
+---[font=Inconsolata 100px][ansible.jpg]
+ANSIBLE
+#Ansible:
+#
+# Radically simple automation
+# Low entry barrier.
+# Flat learning curve.
+---[ansible.jpg]
+All you need is:
+
+SSH connection to the remote host
+#Don't believe the Internets that say
+#that you need Python to start.
+---[font=Inconsolata 100px]
+YAML
+#YAML: YAML Ain't Markup Language
+#
+#* human readable (XML anyone?)
+#* lists (arrays)
+#* dictionaries (associative arrays, hash-maps)
+#* scalars (strings, numbers)
+#* hierarhical data representation
+
+---[text-align=left]
+YAML example
+\---
+# scalar
+acronym: TARDIS
+# scalar
+full_name: Time And Relative Dimension In Space
+# list
+other_names:
+    - the ship
+    - the blue box
+    - the police box
+# list of dictionaries dictionary
+occupants:
+    - name: The Doctor
+      role: Timelord
+      hearts: 2
+    - name: Amelia Pond
+      role: Companion
+      
+---[font=Inconsolata 100px][tetris.png]
+Basic building blocks
+       
+---[text-align=left][tetris.png]
+Ansible: Basic building blocks.
+# więcej o tym na następnych slajdach
+
+* inventory
+* variables
+* modules
+* templates
+* tasks (handlers, pre-, post-tasks)
+* roles
+* plays
+* playbooks
+
+---[font=Inconsolata 100px][inventory.jpg]
+Inventory
+# trzeba wiedzieć z czym się pracuje.
+# ustrukturyzowana lista hostów
+# może być statyczna, dynamiczna jak i hybrydowa
+---[text-align=left][inventory.jpg]
+#Inventory file,
+#a simple ini-style file:
+
+host1.fqdn
+#można pełne nazwy domentowe
+host1 ansible_ssh_host=10.0.0.1
+# można aliasy, i tu pierwsze wystąpienie zmiennej.
+10.0.1.99
+# można też gołe adresy IP.
+
+---[text-align=left][inventory.jpg]
+Inventory groups:
+# hosty można oczywiście grupować
+
+[group1]
+host1
+host2
+
+[group2]
+host1
+host3
+
+---[text-align=left][inventory.jpg]
+We must go deeper!
+
+# grupy można grupować
+[group3:children]
+group1
+group2
+
+---[text-align=left][inventory.jpg]
+Final inventory would look like that:
+
+host[1-4].fqdn
+
+[group1]
+host[1-3]
+
+[group2]
+host2
+
+[ubergroup:children]
+group1
+group2
+     
+---[text-align=left][inventory.jpg]
+# Tylko jako przykład, dynamiczny katalog.
+Dynamic inventory (Amazon, VMware, Proxmox, ...)
+
+An executable that returns JSON. Must take two 
+mutually exclusive invocation arguments
+
+\--list 
+    {"group_1": {
+        "hosts": [h1,h2], 
+        "vars": {"k":"v"} }
+        }
+
+\--host HOSTNAME
+    empty OR {"k1": "v1", "k2": "v2"}
+
+http://docs.ansible.com/ansible/developing_inventory.html
+---[font=Inconsolata 100px][variables.jpg]
+Variables
+---[text-align=left][variables.jpg]
+variables:
+# podstawowe zmienne to zmienne hostów i grup.
+# 
+
+HOST:  host_vars/host1.fqdn.yml
+GROUP: group_vars/group/vars.yml
+
+* scalars
+* lists
+* dictionaries
+
+---[font=Inconsolata 100px][modules.jpg]
+Modules
+# moduły to podstawowe klocki, z których się korzysta
+
+---[text-align=left][modules.jpg]
+
+modules (plugins):
+* action 
+# główne elementy sterujące
+#
+* callback 
+# raportowanie
+#
+* connection
+# udostępniają połączenie
+#
+* filter
+# filtry jinji, manipulacja danych
+#
+* lookup
+# wczytanie danych z innego źródła. plik, dns, ...
+#
+* vars
+# dostarczenie host i group varsów.
+
+---[font=Inconsolata 200px][modules.jpg]
+497
+#Action plugins in total
+
+---[font=Inconsolata 200px][modules.jpg]
+289
+#"Extras" modules 
+#(less restricting operational policy)
+#
+#14 Deprecated modules
+#29 Windows modules
+#33 Amazon EC2 modules
+
+---[font=Inconsolata 100px][modules.jpg]
+callback plugins
+---[text-align=left][modules.jpg]
+* after every atomic action
+* can be used to send e-mails, 
+  hipchat messages, etc
+
+---[text-align=left][modules.jpg]
+connection plugins: 
+provide connection mechanism
+
+vars plugins: 
+provide host_vars and group_vars
+
+---[font=Inconsolata 100px][modules.jpg]
+Most probably you will not touch them... ever.
+
+---[font=Inconsolata 100px][modules.jpg]
+filter plugins
+---[text-align=left][modules.jpg]
+
+ jinja2 filter definitions. 
+
+You will write them to simplify your playbooks.
+
+{{ my_var|upper }}
+
+{{ registered_var|changed }}
+
+{{ other_var|lower|rot13 }}
+---[font=Inconsolata 100px][modules.jpg]
+lookup plugins
+
+---[modules.jpg]
+return content based on arguments
+
+e.g. lookup('dns','google.com') 
+will return google's IP address
+
+---[font=Inconsolata 100px][template.jpeg]
+templates
+---[template.jpeg]
+Templating engine is Jinja2. 
+
+Allows for easy content customization.
+
+A template has access to:
+host and group variables,
+facts and registered playbook variables.
+
+Simple flow control:
+loops, conditionals, includes, ...
+---[text-align=left][template.jpeg]
+# przykładowa templatka dla /etc/hosts
+
+{{ ansible_default_ipv4.address }} 
+    {{ ansible_hostname }} 
+    {{ ansible.fqdn }]
+    {{ inventory_hostname }}
+    {{ inventory_hostname.short }}
+
+---[font=Inconsolata 100px][usage.jpg]
+USAGE
+
+---[font=Inconsolata 100px][tasks.jpg]
+tasks
+
+---[text-align=left][tasks.jpg]
+a task is basically a module invocation
+e.g.
+\---
+\- name: ensure nginx is installed
+  apt:
+    name: nginx
+    state: latest
+
+
+\# ansible-doc module_name
+
+---[font=Inconsolata 100px][role.jpg]
+Roles
+---[text-align=left][role.jpg]
+a role is a set of tasks 
+e.g.
+\--- 
+\- apt_key: 
+    id: BBEBDCB318AD50EC6865090613B00F1FD2C19886
+    keyserver: keyserver.ubuntu.com
+
+\- apt_repository:
+    repo: deb http://repository.spotify.com testing non-free
+
+\- apt: 
+	update_cache: yes
+
+\- apt:
+    name: spotify-client
+    cache_valid_time: 2600
+
+---[font=Inconsolata 100px][play.jpg]
+Plays
+# zestaw ról, które są nadane hostom/grupom
+---[text-align=left][play.jpg]
+\---
+\- hosts:
+    - all,!localhost
+  pre_tasks:
+    - apt:
+        update_cache: yes
+  roles:
+    - monitoring/nrpe-agent
+  become: yes
+  serial: 10
+  user: ansible
+  strategy: free
+  become_user: root
+---[font=Inconsolata 100px][playbook.jpg]
+Playbooks
+# zestaw play'ów
+---[text-align=left][playbook.jpg]
+\- hosts: 
+	- all
+  roles: 
+    - init
+    - monitoring
+\- hosts:
+	- webservers
+  roles:
+  	- { role: nginx, vserver: management }
+  	- { role: nginx, vserver: client_portal }
+
+---[font=Inconsolata 100px][bonus.jpg]
+Bonus:
+Ad-Hoc commands
+---[text-align=left][bonus.jpg]
+Let's install Python!
+
+ansible \
+    all \
+    -m raw \
+    -a "apt-get -qqy install python"
+---[font=Inconsolata 100px][best_practice.gif]
+Best Practices
+---[text-align=left][best_practice.gif]
+http://docs.ansible.com/playbooks_best_practices.html
+
+production        # inventory file for prod
+stage             # inventory file for stage
+group_vars/
+   group1         # here we assign variables
+                  # to particular groups
+host_vars/
+   hostname1      # host specific variables
+site.yml          # master playbook
+webservers.yml    # playbook for webserver tier
+roles/
+    common/       # roles
+    monitoring/   # 
+
+--- [font=Inconsolata 100px][men-in-black.jpg][text-align=center]
+Forget That!
+Doesn't scale
+---[text-align=left][best_practice.gif]
+Keep your roles separate from your inventory
+
+roles/          # roles repository
+
+environments/   # environment repository
+    production/
+        prod1
+        prod2
+    staging/
+        stage1
+        stage2
+---[text-align=left][best_practice.gif]
+A directory is also a file,
+
+production/   # inventory DIRECTORY 
+    webservers
+    cache
+    monitoring
+    wtf
+    omg
+
+---[text-align=left][best_practice.gif]
+Keep your group and host vars 
+alongside the inventory
+
+environments/
+    production/
+        prod1/
+            inventory
+            group_vars/
+            host_vars/
+
+---[text-align=left][best_practice.gif]
+specify the environment during runtime
+
+ansible-playbook -i \
+    environments/production/prod1/inventory
+
+(or make an alias for that)
+
+This way you will not run a playbook 
+on a wrong environment
+
+---[text-align=left][best_practice.gif]
+Don't keep playbooks in the main directory.
+Use a tree structure:
+
+plays/
+    monitoring/
+        set_up_wtf_mon.yml
+    deploy/
+        application1.yml
+    security/
+        add_ssh_user.yml
+
+---[text-align=left][best_practice.gif]
+Add an environment variable
+pointing to the roles' root dir.
+
+export ANSIBLE_ROLES_PATH=\
+    ~/git/orchestration/roles
+
+That way your playbooks will 
+always see roles that they use.
+
+---[text-align=left][best_practice.gif]
+change the default dictionary
+update policy.
+
+Default: overwrite
+
+"better": 
+hash_behaviour=merge
+---[font=Inconsolata 100px][tip.jpg]
+Useful tip
+---[text-align=left][tip.jpg]
+vars precendence:
+
+» role/defaults
+# najmniej wazne są wartości domślne dla roli
+#
+» group_vars 
+# następnie brane są pod uwagę zmienne grup, uwaga na zawieranie się grup
+#
+» host_vars
+# zmienne hostów nadpisują zmienne grupowe
+# 
+» role/vars 
+# zmienne zaincludowane w roli
+#
+» {role: foo, var: bar}
+# parametry wywołania roli
+#
+» playbook vars
+# zmienne zdefiniownae na poziomie playbooka
+#
+» --extra-vars="var=bar"
+# zmienne 
+#
+» vars/
+» role dependencies
+» facts
+» register variables
+
+https://github.com/cookrn/ansible_variable_precedence
+--- [font=Inconsolata 100px][vault.jpg]
+Vault
+# sposób na przechowywanie haseł
+
+---[vault.jpg]
+$ANSIBLE_VAULT;1.1;AES256
+3661303264353231353730343131383033333938
+3036356336366431386637383062396535613434
+3438353366366236383731343632353338336466
+636435360a323134366335623162303836363365
+3031303530383331326363633235613834396462
+6665653836623339636332333931313831663166
+6534643137313030640a64653365353136633636
+3266613837626434636637353635633931306363
+6130
+
+
+---[text-align=left][vault.jpg]
+group_vars/all/database.yml
+db:
+    server: dbserver1
+    sid: prod
+    port: 1521
+
+ansible-vault edit \ 
+    group_vars/all/vault.yml
+
+db:
+    root:
+        password: 8.apud
+
+---[font=Inconsolata 100px][new.png]
+New in 2.0
+"Over the Hills and Far Away"
+---[font=Inconsolata 100px][new.png]
+Task Blocks
+--- [text-align=left][new.png]
+\- block:
+  - debug: msg="normal operation"
+  - command: /bin/false
+  rescue:
+  - debug: msg="caught an error, rescuing!"
+  always:
+  - debug: msg="this will always run" 
+
+---[font=Inconsolata 100px][new.png]
+dynamic includes
+# include: with_items
+# ciekawostka: do 1.6 można było to robić bez problemu.
+
+---[font=Inconsolata 100px][new.png]
+New Execution Strategy Plugins
+---[new.png][text-align=left]
+» linear: classic strategy, a task
+          is run on every host,
+          then move to new task
+          
+» free:   run all tasks on all hosts 
+          as quickly as possible,
+          but still in-order    
+
+---[font=Inconsolata 100px][new.png]
+Added `meta: refresh_inventory` 
+to force rereading the inventory in a play.
+# do tej pory było ciężko w jednym przebiegu sprowiżonować i skonfigurować kontener
+
+---[font=Inconsolata 100px][new.png]
+New Modules
+---[text-align=left][new.png]
+» deploy_helper
+# standaryzuje akcje przy deploymencie, trzyma odpowiednią liczbę backupów
+» dpkg_selections
+# pozwala "zatrzymać" wersję pakietu. Przydatne gdy paczki dystrybuujemy przez repo.
+» iptables
+# do tej pory nie było...
+» maven_artifact
+# pozwala na intelignetne pobieranie z nexusa
+»  os_*
+# cała masa modułów openstackowych
+» vmware_*
+# cała masa modułów do vmware
+» ...
+
+https://raw.githubusercontent.com/
+ansible/ansible/stable-2.0/CHANGELOG.md
+
+---[enough.jpg]
+It's a GOOD tool.
+
+A good tool for
+CONFIGURATION MANAGEMENT.
+
+Do not try to rewrite your ant/maven jobs using it. 
+
+---  [top] [font=Monospace 150px][blah.png]
+QUESTIONS?
+
+---  [top-right] [fill][font=Monospace 100px][theend.jpg] 
+THE
+END
+
+
+---
+
+Don't be afraid of writing
+your own jinja filters.
+
+It's really simple.
+---[text-align=left]
+export  
+    ANSIBLE_FILTER_PLUGINS=
+        ~/git/orchestration/
+        plugins/filter_plugins
+
+---[text-align=left]
+\# rot13.py
+def enc_rot13( s ):
+  return s.encode('rot13')
+
+class FilterModule( object ):
+  def filters( self ):
+    return {
+        'rot13' : enc_rot13
+    }
+
+---[text-align=center]
+
+Ansible is 
+easily extensible.
+
+Write your own modules!
+
+---[text-align=left]
+Arguments are passed as a file.
+# we have to read that file in
+with open(sys.argv[1]) as f:
+    args=f.read()
+
+---[text-align=left]
+split that into a list
+args = args.split()
+---[text-align=left]
+intelligently split 
+that string into a list
+
+args = shlex.split( args )
+
+---[text-align=left]
+Key, value pairs would be nice
+
+args = [ 
+    x.split( '=', 1 ) 
+    for z in args ]
+
+args = {
+    k: v 
+    for k, v in args }
+
+---[text-align=left]
+Modules return nothing. 
+They print json to stdout.
+
+print json.dumps({
+    'changed': True,
+    'foo': 'bar'
+})
+
+ONLY dictionaries!
+---
+---[text-align=left]
+Modules can suplement 
+default facts 
+known about the node
+
+just add the 'ansible_facts' key
+to json
+---[text-align=left]
+{
+    "changed": True,
+    "ansible_facts" : {
+        "hack_time": {
+            "ready": True
+        }
+    }
+}
+---
+Now that we know how it is done...
+
+--- [font=Inconsolata 100px][men-in-black.jpg][text-align=center]
+Forget That!
+too cumbersome...
+
+---[text-align=left]
+from ansible.module_utils.basic import *
+
+module = AnsibleModule(
+    argument_spec= {
+        supports_check_mode: False,
+        state: {
+            default:'present',
+            choices: [
+                'present', 
+                'absent'
+                ]
+        },
+        foo: bar
+    }
+)
+---[text-align=left]
+\# exit helpers
+module.exit_json(
+    changed=True, 
+    akadamia='jlabs'
+    )
+
+module.fail_json(
+    msg="it's a trap"
+    )
+---[text-align=left]
+Our first module
+from ansible.module_utils.basic \
+    import *
+module = AnsibleModule(
+    argument_spec={}   )
+def main():
+    module.exit_json(
+        changed=False,
+        akadamia='jlabs'
+        )
+main()
+---[text-align=left]
+ ansible/hacking/test-module -m akadamia
+***********************************
+RAW OUTPUT
+{"changed": false, "akadamia": "jlabs"}
+
+PARSED OUTPUT
+{
+        "changed": false, 
+        "akadamia": "jlabs"
+}
+---[text-align=left]
+but modules DO NOT have to be Python
+
+\#!/bin/bash
+\# sudo rm -rf /
+echo '{ "changed": false, "akadamia": "jlabs" }'
+
+---[text-align=left]
+ansible/hacking/test-module -m akadamia2 
+
+***********************************
+RAW OUTPUT
+{ "changed": false, "akadamia": "jlabs" }
+
+
+***********************************
+PARSED OUTPUT
+{
+        "changed": false, 
+        "akadamia": "jlabs"
+}
+
+
