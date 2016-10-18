@@ -1,0 +1,272 @@
+#! /usr/bin/env pinpoint
+[text-align=center][font=Inconsolata 50px][white]
+--- [title.jpg]
+# title slide
+"distributed Icinga2 monitoring made easy"
+
+
+@lukaszproszek
+Anonimowi Admini Reaktywacja
+Kraków, 2017-10-18
+
+---[devops.png][bottom]
+about:
+Senior DevOps Engineer
+Python enthusiast
+Ansible evangelist
+Strongly believes in Pasta and Beer
+
+---[nagios_dashboard.png][fill]
+
+Why you no use Nagios?
+#like "everyone else does"?
+
+# rant about clustering
+# rant about config propagation
+
+---[nagios_map.png][text-align=right][bottom-right]
+
+Typical setup<sup><small>TM</small></sup>
+
+# central nagios server
+# one node performing checks
+# usually this node perform checks on remote (geo) systems (sic!)
+# nsca setup failed
+
+---[web_workflow2.jpg][bottom-right]
+
+Basic setup
+
+# icinga-core: checker
+# mod: graphite writer
+# alerting: sms? slack? email?
+# idodb: stores check results (galera? pg-bdr?)
+# icinga web2 
+# api service
+
+---[icinga-ha.png]
+
+# define multiple nodes in the master zone
+# only one is a active writer to the database
+# check performing spread across every node
+
+---[text-align=left]
+
+object Host "master1" {   }
+object Host "master2" {   }
+
+object Endpoint "master1" {host="master1"}
+object Endpoint "master2" {host="master2"}
+
+object Zone "master_zone" {
+    endpoints = ["master1","master2"]
+}
+
+# two nodes
+# only one is writing to the database
+# both receive check results
+#
+---[text-align=left]
+
+HA db (e.g. galera)
+
+object IdoMysqlConnection "ido-mysql" {  
+    host = 127.0.0.1
+}
+
+haproxy:
+listen galera 127.0.0.1:3306
+    balance source
+    mode tcp
+    option tcpka
+    option mysql-check user haproxy
+    server galera01 galera01:3306 check weight 1
+    server galera02 galera02:3306 check weight 1
+    server galera03 galera03:3306 check weight 1
+
+# do the same with graphite
+#
+---[icinga-distributed.png]
+
+---[text-align=left]
+
+object Host "zone1-satellite1" {  import "satellite-host"  }
+object Host "zone1-satellite2" {  import "satellite-host"  }
+
+object Endpoint "zone1-satellite1" { host=zone1-satallite1 }
+object Endpoint "zone1-satellite2" { host=zone1-satallite2 }
+
+object Zone "zone1" { 
+    endpoints = ["zone1-satellite1","zone1-satellite2"]
+    parent "master_zone"
+    }
+
+---[text-align=left]
+
+Icinga uses PKI to authenticate nodes. 
+
+You can use your own. 
+    (Active Directory?)
+
+You can use the wizard. 
+    (on the slave: `icinga2 node wizard` )
+
+You can perform manual steps via icinga toolset 
+    ( I've put it into a playbook playbook )
+
+---[text-align=left]
+Manual register the satellite in the master
+
+M# S="zone1-satellite1"
+
+M# /usr/sbin/icinga2 pki new-cert \
+	--cn $S --key ${S}.key --csr ${S}.csr
+
+M# /usr/sbin/icinga2 pki sign-csr \
+	--csr ${S}.csr --cert ${S}.cert
+
+copy results to satallite:/etc/icinga2/pki/
+
+
+---[text-align=left]
+
+adjust  satellite /etc/icinga2/features-enabled/api.conf
+
+object ApiListener "api" {
+  cert_path = SysconfDir + "/icinga2/pki/" + NodeName + ".crt"
+  key_path = SysconfDir + "/icinga2/pki/" + NodeName + ".key"
+  ca_path = SysconfDir + "/icinga2/pki/ca.crt"
+  accept_config = true
+  accept_commands = true
+  ticket_salt = TicketSalt
+
+---[magic.jpg][top]
+
+store your zone configuration on the master in
+/etc/icinga2/zones.d/zone1/
+
+It is automagically copied via api to respective zones
+
+
+---[text-align=left]
+Global configuration for all zones:
+/etc/icinga2/icinga.conf
+
+object Zone "global-templates" { 
+	global = true }
+
+place your object definitions in 
+
+/etc/icinga2/zones.d/global-templates
+
+
+---[text-align=left]
+
+A lot of checks are readily available with minimal config. e.g.
+
+object Host ... {
+
+  vars.http_vhosts['site1'] = {
+	 http_uri = "/site1" }
+
+  vars.http_vhosts['site1-admin'] = { 
+	 http_uri = "/site1/admin" }
+}
+
+will add those uris to the checklist
+
+---[icinga-graphing.png]
+
+Check result visualization.
+
+---[nagiosgrapher.jpg][top-left][text-align=left]
+
+Ever tried 
+nagiosgrapher?
+
+---[text-align=left][pencil.jpg][bottom]
+icinga2
+
+object GraphiteWriter "graphite" {
+	host = "127.0.0.1"
+	port= 2003
+	enable_send_thresholds = true  
+	enable_send_metadata = true 
+}
+
+
+---[gui.png]
+
+Web GUI is a separate application.
+
+icingaweb2 is the recommended one.
+
+---
+
+Can authenticate users via several backends (AD works fine)
+
+Simple setting of user permissions.
+
+Can integrate graphite charts.
+
+
+---
+
+What about my current nagios installation?
+
+---
+
+Icinga2 is 
+"monitoring plugin compatible"
+
+That means that all your plugins are compatible.
+
+---[text-align=left]
+https://nagios-plugins.org/doc/guidelines.html
+
+A plugin:
+
+ - is a single binary
+
+ - preferrably executes in less than 10s
+
+ - exits with a status code 
+        0-OK, 1-WARN, 2-CRIT, 3-UNK
+
+ - optionally returns performance data 
+        | key=value, key=value
+
+---[text-align=left]
+Example:
+
+./check_hotrod_cache -H host1.wtf --cache_name CompanyLayer
+
+HOTROD_CACHE OK - CompanyLayer | hits=81 joinComplete=1;1:1 (...)
+
+---[text-align=left]
+object CheckCommand "hotrod_cache" {
+        import "plugin-check-command"
+        command = [ PluginDir + "/check_hotrod_cache" ]
+        arguments = {
+                "--cache_name" = "$cache_layer$"
+        }
+}
+
+---[text-align=left]
+apply Service "hotrod-cache-" 
+	for ( layer => config in host.vars.cache_layers )  {
+    	import "generic-service"
+	    vars += config
+    	display_name =  "Hotrod Cache: " + layer
+    	check_command = "hotrod_cache"
+    	assign where match ("*hotrod*", host.name)
+}
+
+
+
+--- [trick-question.png] [top] [font=Monospace 150px]
+QUESTIONS?
+
+--- [insanity.jpg] [top-right] [fill][font=Monospace 100px] 
+THE
+END
