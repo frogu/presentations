@@ -1,0 +1,134 @@
+#! /usr/bin/env pinpoint
+[text-align=left]
+[font=Inconsolata 50px]
+[welcome.png]
+
+--- [welcome.png][text-align=center][bottom-left]
+@lukaszproszek
+lukasz.proszek@lumesse.com
+
+Lumesse Tech Meetup #1     Kraków, 2017-01-30
+
+---[bottom-left]
+about:
+Senior Development Operation Engineer
+Python enthusiast
+Ansible evangelist
+Strongly believes in Pasta and Beer
+
+---[font=Inconsolata 100px][top]
+
+Increasing collaboration between 
+development and operations groups
+
+---[alkohol_01.mp4]
+
+---
+Ceasar's strategy
+(question time!)
+
+---
+
+Break huge problems into smaller parts.
+
+---
+
+Ceasar was a smart guy.
+Let's implement this to our
+organizational structure.
+
+---
+
+Segragation of duties:
+
+* development
+* operations
+* product management
+* QA
+* ...
+
+---
+
+And that leads us to...
+
+---[font=Inconsolata 100px][silos.jpg]
+SILOS!
+
+---[font=Inconsolata 100px][wall.png] [bottom]
+
+"walls of confusion!"
+
+---
+
+Breaking down silos.
+
+---
+
+Buzzword: DevOps
+
+---[silo_climb.png][top]
+
+Create a team that will "master the devops"
+
+---
+
+A natural first step
+
+---
+
+et viola!
+
+---[new_silo.png][bottom]
+
+New silo!
+
+---
+
+You're doing it wrong!
+
+---
+
+Even with the best people
+Devops is just another buzzword
+if you don't have the right culture
+
+---
+
+Increased collaboration
+
+---
+
+Shared responsibility
+
+---[font=Inconsoloata 12px][bottom-right]
+
+pause
+
+---[twitter_01.png]
+
+---[twitter_01b.png]
+
+---[twitter_01c.png]
+
+---[twitter_02.png]
+
+---[twitter_03.png]
+
+---[twitter_04.png]
+
+
+
+
+
+
+---  [top-right] [fill][font=Monospace 100px] 
+THE
+END
+
+
+
+
+
+---  [top-right] [fill][font=Monospace 100px] 
+THE
+END
